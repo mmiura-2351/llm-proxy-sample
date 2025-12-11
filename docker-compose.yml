@@ -9,14 +9,16 @@ services:
       - vllm-cache:/root/.cache/huggingface
     environment:
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - VLLM_CONFIGURE_LOGGING=1
+      - VLLM_LOGGING_LEVEL=INFO
     command: >
       --model Qwen/Qwen2.5-0.5B-Instruct
       --host 0.0.0.0
       --port 8000
-      --device cpu
-      --dtype float16
+      --dtype auto
       --max-model-len 2048
       --enforce-eager
+      --disable-log-requests
 
   # TEI service - Multilingual E5 埋め込みモデル (CPU専用)
   embedding:
@@ -27,10 +29,12 @@ services:
     volumes:
       - embedding-cache:/data
     environment:
-      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - HF_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     command: >
       --model-id intfloat/multilingual-e5-large-instruct
       --port 80
+      --max-batch-tokens 16384
+      --max-client-batch-size 32
 
   # LiteLLM Proxy - 統合エンドポイント
   litellm:

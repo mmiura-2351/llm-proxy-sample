@@ -16,3 +16,4 @@ model_list:
 litellm_settings:
   set_verbose: true
   request_timeout: 600
+  drop_params: true
