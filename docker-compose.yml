@@ -9,6 +9,7 @@ services:
       - vllm-cache:/root/.cache/huggingface
     environment:
       - HF_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - VLLM_TARGET_DEVICE=cpu
     command: >
       --model Qwen/Qwen2.5-0.5B-Instruct
       --host 0.0.0.0
