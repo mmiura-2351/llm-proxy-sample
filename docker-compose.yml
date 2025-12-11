@@ -1,21 +1,23 @@
 services:
-  # vLLM service - Qwen2.5 0.5B チャットモデル (CPU専用)
-  vllm-qwen:
-    image: vllm/vllm-openai:v0.5.5
-    container_name: vllm-qwen
+  # llama.cpp server - Qwen2.5 0.5B チャットモデル (CPU専用)
+  llama-cpp:
+    image: ghcr.io/abetlen/llama-cpp-python:latest
+    container_name: llama-cpp
     ports:
       - "8000:8000"
     volumes:
-      - vllm-cache:/root/.cache/huggingface
+      - llama-models:/models
     environment:
-      - HF_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-      - VLLM_TARGET_DEVICE=cpu
+      - MODEL=/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+      - HOST=0.0.0.0
+      - PORT=8000
     command: >
-      --model Qwen/Qwen2.5-0.5B-Instruct
+      --model /models/qwen2.5-0.5b-instruct-q4_k_m.gguf
       --host 0.0.0.0
       --port 8000
-      --device cpu
-      --trust-remote-code
+      --n_ctx 2048
+      --n_threads 4
+    restart: unless-stopped
 
   # TEI service - Multilingual E5 埋め込みモデル (CPU専用)
   embedding:
@@ -30,6 +32,7 @@ services:
     command: >
       --model-id intfloat/multilingual-e5-large-instruct
       --port 80
+    restart: unless-stopped
 
   # LiteLLM Proxy - 統合エンドポイント
   litellm:
@@ -43,8 +46,9 @@ services:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-1234}
     command: --config /app/config.yaml --port 4000
     depends_on:
-      - vllm-qwen
+      - llama-cpp
       - embedding
+    restart: unless-stopped
 
   # クライアントコンテナ
   client:
@@ -59,7 +63,8 @@ services:
     depends_on:
       - litellm
     command: tail -f /dev/null
+    restart: unless-stopped
 
 volumes:
-  vllm-cache:
+  llama-models:
   embedding-cache:

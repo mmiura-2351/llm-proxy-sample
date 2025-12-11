@@ -28,6 +28,10 @@ logs/
 vllm-cache/
 .cache/
 
+# モデルファイル
+models/*.gguf
+models/*.bin
+
 # OS
 .DS_Store
 Thumbs.db
