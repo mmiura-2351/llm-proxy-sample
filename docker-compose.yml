@@ -1,40 +1,37 @@
 services:
   # vLLM service - Qwen2.5 0.5B チャットモデル (CPU専用)
   vllm-qwen:
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:v0.6.3.post1
     container_name: vllm-qwen
     ports:
       - "8000:8000"
     volumes:
       - vllm-cache:/root/.cache/huggingface
     environment:
-      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-      - VLLM_TARGET_DEVICE=cpu
-      - VLLM_CPU_KVCACHE_SPACE=4
+      - HF_TOKEN=${HUGGING_FACE_HUB_TOKEN}
       - VLLM_WORKER_MULTIPROC_METHOD=spawn
     command: >
       --model Qwen/Qwen2.5-0.5B-Instruct
       --host 0.0.0.0
       --port 8000
-      --dtype auto
+      --device cpu
+      --dtype float16
       --max-model-len 2048
-      --enforce-eager
       --trust-remote-code
 
   # TEI service - Multilingual E5 埋め込みモデル (CPU専用)
   embedding:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.2
     container_name: embedding
     ports:
       - "8001:80"
     volumes:
       - embedding-cache:/data
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     command: >
       --model-id intfloat/multilingual-e5-large-instruct
       --port 80
-      --max-batch-tokens 16384
-      --max-client-batch-size 32
-      --hf-api-token ${HUGGING_FACE_HUB_TOKEN}
 
   # LiteLLM Proxy - 統合エンドポイント
   litellm:
