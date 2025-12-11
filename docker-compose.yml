@@ -1,0 +1,66 @@
+services:
+  # vLLM service - Qwen2.5 0.5B チャットモデル (CPU専用)
+  vllm-qwen:
+    image: vllm/vllm-openai:latest
+    container_name: vllm-qwen
+    ports:
+      - "8000:8000"
+    volumes:
+      - vllm-cache:/root/.cache/huggingface
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    command: >
+      --model Qwen/Qwen2.5-0.5B-Instruct
+      --host 0.0.0.0
+      --port 8000
+      --device cpu
+      --dtype float16
+      --max-model-len 2048
+      --enforce-eager
+
+  # TEI service - Multilingual E5 埋め込みモデル (CPU専用)
+  embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: embedding
+    ports:
+      - "8001:80"
+    volumes:
+      - embedding-cache:/data
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    command: >
+      --model-id intfloat/multilingual-e5-large-instruct
+      --port 80
+
+  # LiteLLM Proxy - 統合エンドポイント
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-1234}
+    command: --config /app/config.yaml --port 4000
+    depends_on:
+      - vllm-qwen
+      - embedding
+
+  # クライアントコンテナ
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: client
+    volumes:
+      - ./client:/app
+    environment:
+      - LITELLM_API_KEY=${LITELLM_MASTER_KEY:-sk-1234}
+    depends_on:
+      - litellm
+    command: tail -f /dev/null
+
+volumes:
+  vllm-cache:
+  embedding-cache:

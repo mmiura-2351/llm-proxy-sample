@@ -1,0 +1,40 @@
+# 環境変数
+.env
+litellm-secrets.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Docker
+docker-compose.override.yml
+
+# データベース
+*.db
+*.sqlite
+postgres-data/
+
+# ログ
+*.log
+logs/
+
+# キャッシュ
+vllm-cache/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
