@@ -1,7 +1,7 @@
 services:
   # vLLM service - Qwen2.5 0.5B チャットモデル (CPU専用)
   vllm-qwen:
-    image: vllm/vllm-openai:v0.6.3.post1
+    image: vllm/vllm-openai:v0.5.5
     container_name: vllm-qwen
     ports:
       - "8000:8000"
@@ -9,14 +9,10 @@ services:
       - vllm-cache:/root/.cache/huggingface
     environment:
       - HF_TOKEN=${HUGGING_FACE_HUB_TOKEN}
-      - VLLM_WORKER_MULTIPROC_METHOD=spawn
     command: >
       --model Qwen/Qwen2.5-0.5B-Instruct
       --host 0.0.0.0
       --port 8000
-      --device cpu
-      --dtype float16
-      --max-model-len 2048
       --trust-remote-code
 
   # TEI service - Multilingual E5 埋め込みモデル (CPU専用)
